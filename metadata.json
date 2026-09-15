@@ -1,0 +1,6 @@
+{
+  "name": "Memory War",
+  "description": "A fun party multiplayer memory battle game for 2 to 6 players on the same device featuring 5 unique memory rounds.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

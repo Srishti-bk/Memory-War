@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory War - Multiplayer Party Game</title>
+  <meta name="description" content="A fun party multiplayer memory battle game for 2 to 6 players on the same device featuring 5 unique memory rounds." />
+  <meta property="og:title" content="Memory War - Multiplayer Party Game" />
+  <meta property="og:description" content="A fun party multiplayer memory battle game for 2 to 6 players on the same device featuring 5 unique memory rounds." />
+  <meta property="og:type" content="website" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="app" class="app-container">
+    <!-- Top Utility Bar (always present during active gameplay) -->
+    <header id="game-header" class="game-header hidden">
+      <div class="header-left">
+        <span class="game-logo-mini">🧠 MEMORY WAR</span>
+        <span id="round-indicator" class="round-badge">Round 1 of 5</span>
+      </div>
+      <div class="header-center">
+        <div id="current-player-pill" class="player-pill">
+          <span id="player-badge-avatar" class="pill-avatar">🐱</span>
+          <span id="player-badge-name" class="pill-name">Player 1</span>
+          <span id="player-badge-score" class="pill-score">0 pts</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <button id="btn-toggle-scoreboard" class="icon-btn" title="View Current Standings" aria-label="Toggle scoreboard">
+          📊 Scores
+        </button>
+        <button id="btn-toggle-sound" class="icon-btn" title="Toggle Sound" aria-label="Toggle sound">
+          🔊
+        </button>
+        <button id="btn-quit-game" class="icon-btn danger" title="Quit to Main Menu" aria-label="Quit game">
+          ✕
+        </button>
+      </div>
+    </header>
+
+    <!-- Modal: Live Scoreboard (peek at standings anytime) -->
+    <div id="modal-scoreboard" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Current Standings</h3>
+          <button id="btn-close-scoreboard" class="btn-close">&times;</button>
+        </div>
+        <div id="mini-scoreboard-list" class="mini-score-list">
+          <!-- Populated by JS -->
+        </div>
+        <div class="modal-footer">
+          <button id="btn-done-scoreboard" class="btn btn-secondary">Resume Game</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Confirm Quit -->
+    <div id="modal-quit" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <h3>Quit Current Game?</h3>
+        <p>Your current scores and rounds will be lost.</p>
+        <div class="modal-actions">
+          <button id="btn-confirm-quit" class="btn btn-danger">Yes, Quit</button>
+          <button id="btn-cancel-quit" class="btn btn-secondary">Keep Playing</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN VIEWPORTS / SCREENS -->
+    <main id="main-content" class="main-content">
+      
+      <!-- SCREEN 1: START / HOME SCREEN -->
+      <section id="screen-home" class="screen screen-home active">
+        <div class="home-card">
+          <div class="brand-hero">
+            <div class="floating-emojis">
+              <span class="float-item float-1">🧠</span>
+              <span class="float-item float-2">⚡</span>
+              <span class="float-item float-3">🏆</span>
+              <span class="float-item float-4">👀</span>
+            </div>
+            <h1 class="main-title">MEMORY WAR</h1>
+            <p class="subtitle">How good is your memory?</p>
+          </div>
+
+          <div class="home-intro">
+            <div class="feature-tag">🎮 Same-Device Party Game</div>
+            <div class="feature-tag">👥 2 to 6 Players</div>
+            <div class="feature-tag">⚔️ 5 Intense Memory Battles</div>
+          </div>
+
+          <div class="rounds-overview">
+            <h4>The 5 Memory Rounds</h4>
+            <div class="rounds-grid">
+              <div class="round-preview-pill"><span>1</span> Remember The Order</div>
+              <div class="round-preview-pill"><span>2</span> What Changed?</div>
+              <div class="round-preview-pill"><span>3</span> Where Was It?</div>
+              <div class="round-preview-pill"><span>4</span> What's Missing?</div>
+              <div class="round-preview-pill"><span>5</span> Final Memory War</div>
+            </div>
+          </div>
+
+          <div class="home-actions">
+            <button id="btn-start-game" class="btn btn-primary btn-large glow-btn">
+              START GAME
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: PLAYER SETUP -->
+      <section id="screen-setup" class="screen screen-setup hidden">
+        <div class="card setup-card">
+          <h2 class="section-title">Player Setup</h2>
+          <p class="section-desc">Pass one phone, tablet, or laptop around your group!</p>
+
+          <div class="setup-group">
+            <label class="group-label">How many players? (2 to 6)</label>
+            <div id="player-count-buttons" class="player-count-selector">
+              <button type="button" class="btn-count" data-count="2">2</button>
+              <button type="button" class="btn-count active" data-count="3">3</button>
+              <button type="button" class="btn-count" data-count="4">4</button>
+              <button type="button" class="btn-count" data-count="5">5</button>
+              <button type="button" class="btn-count" data-count="6">6</button>
+            </div>
+          </div>
+
+          <div class="setup-group">
+            <label class="group-label">Enter Player Names</label>
+            <div id="player-names-container" class="names-list">
+              <!-- Dynamically populated 2-6 inputs -->
+            </div>
+          </div>
+
+          <div class="setup-actions">
+            <button id="btn-back-home" class="btn btn-secondary">BACK TO HOME</button>
+            <button id="btn-continue-setup" class="btn btn-primary btn-large">CONTINUE</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: TURN TRANSITION (PASS THE DEVICE) -->
+      <section id="screen-transition" class="screen screen-transition hidden">
+        <div class="card transition-card">
+          <div class="pass-icon-wrapper">
+            <span class="device-icon">📱</span>
+            <span class="pass-arrow">➔</span>
+            <span class="hand-icon">🤝</span>
+          </div>
+
+          <h2 class="transition-title">PASS THE DEVICE</h2>
+          <div class="next-player-banner">
+            <span id="trans-avatar" class="trans-avatar">🐱</span>
+            <div>
+              <div class="trans-subtitle">Now it's</div>
+              <div id="trans-player-name" class="trans-name">Player 1</div>
+            </div>
+          </div>
+
+          <p class="trans-warning">
+            🤫 Don't let other players see your screen! Keep answers secret!
+          </p>
+
+          <div class="trans-round-info">
+            <span id="trans-round-name">Round 1: Remember The Order</span>
+          </div>
+
+          <button id="btn-im-ready" class="btn btn-primary btn-large btn-ready">
+            I'M READY
+          </button>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: ACTIVE ROUND CONTAINER -->
+      <section id="screen-game" class="screen screen-game hidden">
+        <div class="game-stage-card">
+          
+          <!-- Round Info Header -->
+          <div class="round-header-box">
+            <div class="round-meta">
+              <span id="game-round-title" class="round-title-text">Round 1: Remember The Order</span>
+              <span id="game-round-instruction" class="round-instruction-text">Memorize the items before the timer runs out!</span>
+            </div>
+            
+            <!-- Dynamic Countdown Timer -->
+            <div id="timer-box" class="timer-box">
+              <div class="timer-label">TIME LEFT</div>
+              <div id="timer-number" class="timer-display">5</div>
+              <div class="timer-bar-container">
+                <div id="timer-bar" class="timer-bar"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Game Arena: Replaced per round -->
+          <div id="game-arena" class="game-arena">
+            <!-- Dynamically populated by active round logic -->
+          </div>
+
+          <!-- Dynamic Feedback Overlay / Container -->
+          <div id="round-feedback" class="feedback-container hidden">
+            <div id="feedback-card" class="feedback-card">
+              <div id="feedback-icon" class="feedback-icon">🎉</div>
+              <h3 id="feedback-title" class="feedback-title">CORRECT!</h3>
+              <p id="feedback-message" class="feedback-message">+1 Point gained!</p>
+              <div id="feedback-details" class="feedback-details"></div>
+              <button id="btn-next-action" class="btn btn-primary btn-large">NEXT PLAYER</button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SCREEN 5: FINAL RESULTS & LEADERBOARD -->
+      <section id="screen-results" class="screen screen-results hidden">
+        <div class="card results-card">
+          <div class="trophy-hero">
+            <span class="trophy-icon">🏆</span>
+            <h2 class="results-title">MEMORY WAR</h2>
+            <div id="winner-announcement" class="winner-box">
+              <span class="winner-crown">👑</span>
+              <h1 id="winner-name" class="winner-text">PLAYER 1 WINS!</h1>
+            </div>
+            <div id="winner-personality-tag" class="personality-tag">
+              🧠 Memory Master
+            </div>
+          </div>
+
+          <!-- Podium / Leaderboard Table -->
+          <div class="leaderboard-section">
+            <h3 class="leaderboard-heading">Final Leaderboard</h3>
+            <div id="leaderboard-list" class="leaderboard-list">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+
+          <!-- Round by Round Breakdown -->
+          <div class="breakdown-section">
+            <button id="btn-toggle-breakdown" class="btn-text-toggle">
+              Show Round Breakdown ▾
+            </button>
+            <div id="breakdown-table-container" class="breakdown-wrapper hidden">
+              <table class="breakdown-table">
+                <thead>
+                  <tr>
+                    <th>Player</th>
+                    <th>R1</th>
+                    <th>R2</th>
+                    <th>R3</th>
+                    <th>R4</th>
+                    <th>R5</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody id="breakdown-table-body">
+                  <!-- Rendered by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Results Actions -->
+          <div class="results-actions">
+            <button id="btn-play-again" class="btn btn-primary btn-large">
+              PLAY AGAIN
+            </button>
+            <button id="btn-new-game" class="btn btn-secondary">
+              BACK TO HOME
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="./script.js"></script>
+</body>
+</html>
